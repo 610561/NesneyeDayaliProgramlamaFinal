@@ -1,2 +1,216 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+// Genel veritabanı işlevselliği içeren sınıf
+class GenelVeritabani {
+    public static void dosyayaKaydet(List<? extends VeritabaniKayit> kayitListesi, String dosyaAdi) {
+        try (FileWriter writer = new FileWriter(dosyaAdi)) {
+            for (VeritabaniKayit kayit : kayitListesi) {
+                String satir = kayit.toCSV(); // Veriyi CSV formatına çevir
+                writer.write(satir + System.lineSeparator());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+// Genel arayüz
+interface VeritabaniKayit {
+    String toCSV();
+}
+
+// Ders sınıfı
+class Ders implements VeritabaniKayit {
+    // (Önceki kodları buraya kopyala)
+
+    @Override
+    public String toCSV() {
+        // Ders verilerini CSV formatına çevir
+        return dersKodu + "," + dersAd + "," + dersDonem + "," + ogretimGorevlisi;
+    }
+}
+
+// Ogrenci sınıfı
+class Ogrenci implements VeritabaniKayit {
+    // (Önceki kodları buraya kopyala)
+
+    @Override
+    public String toCSV() {
+        // Ogrenci verilerini CSV formatına çevir
+        return ogrenciNo + "," + ogrenciAd + "," + ogrenciSoyad + "," + ogrenciBolum + "," +
+                String.join(",", ogrenciDersler);
+    }
+}
+
+// OgretimGorevlisi sınıfı
+class OgretimGorevlisi implements VeritabaniKayit {
+    // (Önceki kodları buraya kopyala)
+
+    @Override
+    public String toCSV() {
+        // Ogretim Gorevlisi verilerini CSV formatına çevir
+        return ogretimGorevlisiNo + "," + ad + "," + soyad + "," + bolum + "," +
+                String.join(",", verdigiDersler);
+    }
+}
+
+// Genel form sınıfı
+class Form extends JFrame {
+    JTextField aramaTextField;
+    JList<String> sonucList;
+    DefaultListModel<String> sonucListModel;
+
+    public Form() {
+        // Form tasarımı burada olacak
+    }
+
+    public void aramaYap(String aramaKelimesi) {
+        // Arama işlemleri burada yapılacak
+    }
+}
+
+// Menü Formu
+class MenuForm extends Form {
+    JButton dersFormButton;
+    JButton ogrenciFormButton;
+    JButton ogretimGorevlisiFormButton;
+
+    public MenuForm() {
+        // Menü form tasarımı burada olacak
+        dersFormButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                DersForm dersForm = new DersForm();
+                dersForm.setVisible(true);
+            }
+        });
+
+        ogrenciFormButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                OgrenciForm ogrenciForm = new OgrenciForm();
+                ogrenciForm.setVisible(true);
+            }
+        });
+
+        ogretimGorevlisiFormButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                OgretimGorevlisiForm ogretimGorevlisiForm = new OgretimGorevlisiForm();
+                ogretimGorevlisiForm.setVisible(true);
+            }
+        });
+    }
+}
+
+// Ders Formu
+class DersForm extends Form {
+    JTextField dersKoduTextField;
+    JTextField dersAdTextField;
+    JTextField dersDonemTextField;
+    JTextField ogretimGorevlisiTextField;
+    JButton kaydetButton;
+
+    public DersForm() {
+        // Ders form tasarımı burada olacak
+        kaydetButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Ders bilgilerini al ve Veritabani'ye ekle
+                String dersKodu = dersKoduTextField.getText();
+                String dersAd = dersAdTextField.getText();
+                String dersDonem = dersDonemTextField.getText();
+                String ogretimGorevlisi = ogretimGorevlisiTextField.getText();
+
+                Ders yeniDers = new Ders(dersKodu, dersAd, dersDonem, ogretimGorevlisi);
+                Veritabani.dersListesi.add(yeniDers);
+
+                // Veritabanı işlemleri burada yapılacak (json, csv, xml kaydetme)
+                GenelVeritabani.dosyayaKaydet(Veritabani.dersListesi, "dersler.csv");
+            }
+        });
+    }
+}
+
+// Ogrenci Formu
+class OgrenciForm extends Form {
+    JTextField ogrenciNoTextField;
+    JTextField ogrenciAdTextField;
+    JTextField ogrenciSoyadTextField;
+    JTextField ogrenciBolumTextField;
+    JComboBox<String> ogrenciDerslerComboBox;
+    JButton kaydetButton;
+
+    public OgrenciForm() {
+        // Ogrenci form tasarımı burada olacak
+        kaydetButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Ogrenci bilgilerini al ve Veritabani'ye ekle
+                String ogrenciNo = ogrenciNoTextField.getText();
+                String ogrenciAd = ogrenciAdTextField.getText();
+                String ogrenciSoyad = ogrenciSoyadTextField.getText();
+                String ogrenciBolum = ogrenciBolumTextField.getText();
+                String secilenDers = (String) ogrenciDerslerComboBox.getSelectedItem();
+
+                Ogrenci yeniOgrenci = new Ogrenci(ogrenciNo, ogrenciAd, ogrenciSoyad, ogrenciBolum);
+                yeniOgrenci.ogrenciDersler.add(secilenDers);
+                Veritabani.ogrenciListesi.add(yeniOgrenci);
+
+                // Veritabanı işlemleri burada yapılacak (json, csv, xml kaydetme)
+                GenelVeritabani.dosyayaKaydet(Veritabani.ogrenciListesi, "ogrenciler.csv");
+            }
+        });
+    }
+}
+
+// Ogretim Gorevlisi Formu
+class OgretimGorevlisiForm extends Form {
+    JTextField ogretimGorevlisiNoTextField;
+    JTextField adTextField;
+    JTextField soyadTextField;
+    JTextField bolumTextField;
+    JComboBox<String> verdigiDerslerComboBox;
+    JButton kaydetButton;
+
+    public OgretimGorevlisiForm() {
+        // Ogretim Gorevlisi form tasarımı burada olacak
+        kaydetButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Ogretim Gorevlisi bilgilerini al ve Veritabani'ye ekle
+                String ogretimGorevlisiNo = ogretimGorevlisiNoTextField.getText();
+                String ad = adTextField.getText();
+                String soyad = soyadTextField.getText();
+                String bolum = bolumTextField.getText();
+                String secilenDers = (String) verdigiDerslerComboBox.getSelectedItem();
+
+                OgretimGorevlisi yeniOgretimGorevlisi = new OgretimGorevlisi(ogretimGorevlisiNo, ad, soyad, bolum);
+                yeniOgretimGorevlisi.verdigiDersler.add(secilenDers);
+                Veritabani.ogretimGorevlisiListesi.add(yeniOgretimGorevlisi);
+
+                // Veritabanı işlemleri burada yapılacak (json, csv, xml kaydetme)
+                GenelVeritabani.dosyayaKaydet(Veritabani.ogretimGorevlisiListesi, "ogretimGorevlileri.csv");
+            }
+        });
+    }
+}
+
+// Uygulama sınıfı
+public class Uygulama {
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                MenuForm menuForm = new MenuForm();
+                menuForm.setVisible(true);
+            }
+        });
+    }
+}
